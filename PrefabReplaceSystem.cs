@@ -10,6 +10,7 @@ using System.Linq;
 using System;
 using Unity.Collections;
 using Unity.Entities;
+using Game.Buildings;
 
 namespace ReplaceThatPrefab
 {
@@ -29,20 +30,7 @@ namespace ReplaceThatPrefab
             CreateTxt();
             m_PrefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
             
-            m_PlacedQuery = GetEntityQuery(new EntityQueryDesc()
-            {
-                All = [
-                    ComponentType.ReadWrite<Static>()
-                    ],
-                None = [
-                    ComponentType.ReadWrite<StreetLight>(),
-                    ComponentType.ReadWrite<Tree>(),
-                    ComponentType.ReadWrite<Plant>(),
-                    ComponentType.ReadWrite<Quantity>(),
-                    ComponentType.ReadWrite<Owner>(),
-                    ]
-            });
-            RequireForUpdate(m_PlacedQuery);
+            
         }
 
         protected override void OnUpdate()
@@ -64,8 +52,9 @@ namespace ReplaceThatPrefab
             }
         }
 
-        internal void StartReplacing()
+        public void StartReplacing()
         { 
+            Enabled = true;
             Mod.log.Info("Starting replacer");
             Dictionary<string, string> nameDictionary = [];
 
@@ -112,76 +101,119 @@ namespace ReplaceThatPrefab
                 Mod.log.Info($"Error loading names from file: {ex.Message}");
             }
 
-            NativeArray<Entity> placedEntities = m_PlacedQuery.ToEntityArray(Allocator.Temp);
-            Mod.log.Info($"{placedEntities.Count()} items found for analyzing.");
-
-            foreach (Entity placedEntity in placedEntities)
+            if (nameDictionary.Count > 0)
             {
-                bool fail = true;
-
-                string log = $"Entity {i} of {placedEntities.Count()}: {placedEntity.Index}";
-
-                EntityManager.TryGetComponent(placedEntity, out PrefabRef prefabRef);
-                m_PrefabSystem.TryGetPrefab(prefabRef, out PrefabBase prefabBase);
-                //Mod.log.Info();
-                if (prefabBase != null)
+                try
                 {
-                    string prefabtype = (prefabBase.prefab.ToString() ?? "Prefabless").Replace(prefabBase.name, "").Replace(" (", "").Replace(")", "");
-                    string prefabFullName = $"{prefabtype}:{prefabBase.name}";
-                    log += $" | prefabFullName is {prefabFullName}";
 
-                    if (nameDictionary.ContainsKey(prefabFullName))
+                    m_PlacedQuery = GetEntityQuery(new EntityQueryDesc()
                     {
-                        string value = nameDictionary[prefabFullName];
-                        log += $" || found in txt, replacing with {value}";
-                        var parts = value.Split(':');
-                        if (parts.Length == 2)
+                        All = [
+                            ComponentType.ReadWrite<Static>()
+                        ],
+                        None = [
+                            ComponentType.ReadWrite<StreetLight>(),
+                            ComponentType.ReadWrite<Tree>(),
+                            ComponentType.ReadWrite<Plant>(),
+                            ComponentType.ReadWrite<Quantity>(),
+                            ComponentType.ReadWrite<Owner>(),
+                            ComponentType.ReadWrite<Color>(),
+                            ComponentType.ReadWrite<Surface>(),
+                            ComponentType.ReadWrite<Lot>(),
+                        ]
+                    });
+                    RequireForUpdate(m_PlacedQuery);
+
+                    NativeArray<Entity> placedEntities = m_PlacedQuery.ToEntityArray(Allocator.Temp);
+                    Mod.log.Info($"{placedEntities.Count()} items found for analyzing.");
+
+                    foreach (Entity placedEntity in placedEntities)
+                    {
+                        bool fail = true;
+
+                        string log = $"Entity {i} of {placedEntities.Count()}: {placedEntity.Index}";
+
+                        EntityManager.TryGetComponent(placedEntity, out PrefabRef prefabRef);
+                        m_PrefabSystem.TryGetPrefab(prefabRef, out PrefabBase prefabBase);
+                        //Mod.log.Info();
+                        if (prefabBase != null)
                         {
-                            string replacingPrefabType = parts[0].Trim();
-                            string replacingPrefabName = parts[1].Trim();
-                            PrefabID newPrefabID = new(replacingPrefabType, replacingPrefabName);
-                            m_PrefabSystem.TryGetPrefab(newPrefabID, out var toReplace);
-                            try
+                            string prefabtype = (prefabBase.prefab.ToString() ?? "Prefabless").Replace(prefabBase.name, "").Replace(" (", "").Replace(")", "");
+                            string prefabFullName = $"{prefabtype}:{prefabBase.name}";
+                            log += $" | prefabFullName is {prefabFullName}";
+
+                            if (nameDictionary.ContainsKey(prefabFullName))
                             {
-                                log += $" ||-|| {toReplace.name}";
-                            }
-                            catch (Exception ex) { log += $" |XXXX| ERROR: {ex}"; } //Why null
-                            if (toReplace != null)
-                            {
-                                m_PrefabSystem.TryGetEntity(toReplace, out Entity prefabEntity);
-                                if (prefabEntity != null)
+                                string value = nameDictionary[prefabFullName];
+                                log += $" || found in txt, replacing with {value}";
+                                var parts = value.Split(':');
+                                if (parts.Length == 2)
                                 {
-                                    EntityManager.SetComponentData(placedEntity, new PrefabRef(prefabEntity));
-                                    EntityManager.AddComponent<Updated>(placedEntity);
-                                    replaced++;
-                                    fail = false;
-                                    log += $" ||| done";
+                                    string replacingPrefabType = parts[0].Trim().Split('.').Last();
+
+                                    string replacingPrefabName = parts[1].Trim();
+                                    PrefabID newPrefabID = new(replacingPrefabType, replacingPrefabName);
+                                    m_PrefabSystem.TryGetPrefab(newPrefabID, out var toReplace);
+                                    //try
+                                    //{
+                                    //    log += $" ||-|| {toReplace.name}";
+                                    //}
+                                    //catch (Exception ex) { log += $" |XXXX| ERROR: {ex}"; } //Why null
+                                    if (toReplace != null)
+                                    {
+                                        m_PrefabSystem.TryGetEntity(toReplace, out Entity prefabEntity);
+                                        if (prefabEntity != null)
+                                        {
+                                            EntityManager.SetComponentData(placedEntity, new PrefabRef(prefabEntity));
+                                            EntityManager.AddComponent<Updated>(placedEntity);
+                                            try
+                                            {
+                                                //var componentType = Type.GetType("Anarchy.Components.PreventOverride, AnarchyMod");
+                                                //if (componentType != null)
+                                                //{
+                                                EntityManager.AddComponent< Anarchy.Components.PreventOverride>(placedEntity);
+                                                //}
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                log += $" XXX {ex}";
+                                            }
+                                            replaced++;
+                                            fail = false;
+                                            log += $" ||| done";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        log += $" |X| failed";
+                                    }
                                 }
-                            } else
-                            {
-                                log += $" |X| failed";
+                                Mod.log.Info(log);
                             }
                         }
-                        Mod.log.Info(log);
-                    }
-                }
-                else
-                {
-                    log +=  $" | No prefabBase";
-                }
+                        else
+                        {
+                            log += $" | No prefabBase: {prefabRef.m_Prefab}";
+                        }
 
-                if (fail == true)
-                {
-                    failed++;
+                        if (fail == true)
+                        {
+                            failed++;
+                        }
+                        Mod.log.Info(log);
+                        i++;
+                    }
+                    Mod.log.Info($"Finished processing {replaced} items...");
+                    if (failed > 0)
+                    {
+                        Mod.log.Info($"Failed {failed} items...");
+                    }
+                    m_PlacedQuery.Dispose();
                 }
-                Mod.log.Info(log);
-                i++;
-            }
-            m_PlacedQuery.Dispose();
-            Mod.log.Info($"Finished processing {replaced} items...");
-            if (failed > 0)
-            {
-                Mod.log.Info($"Failed {failed} items...");
+                catch (Exception e)
+                {
+                    Mod.log.Info($"[ERROR]: {e}");
+                }
             }
             Enabled = false;
         }

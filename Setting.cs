@@ -17,6 +17,7 @@ namespace ReplaceThatPrefab
     {
         //public const string ButtonSection = "";
         //public const string StartReplacementButtonGroup = "";
+        private static readonly PrefabReplaceSystem prs = World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<PrefabReplaceSystem>();
 
         //[SettingsUISection(ButtonSection, StartReplacementButtonGroup)]
         [SettingsUIDisableByCondition(typeof(Setting), nameof(IsNotInGame))]
@@ -24,7 +25,8 @@ namespace ReplaceThatPrefab
         {
             set
             {
-                World.DefaultGameObjectInjectionWorld.GetOrCreateSystemManaged<PrefabReplaceSystem>().StartReplacing();
+                prs.Enabled = true;
+                prs.StartReplacing();
             }
         }
         

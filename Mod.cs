@@ -3,7 +3,6 @@ using Colossal.Logging;
 using Game;
 using Game.Modding;
 using Game.SceneFlow;
-using Unity.Entities;
 
 namespace ReplaceThatPrefab
 {
@@ -14,10 +13,10 @@ namespace ReplaceThatPrefab
         public static string m_Name = "Replace That Prefab";
         public void OnLoad(UpdateSystem updateSystem)
         {
-            log.Info(nameof(OnLoad));
+            //log.Info(nameof(OnLoad));
 
-            if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
-                log.Info($"Current mod asset at {asset.path}");
+            //if (GameManager.instance.modManager.TryGetExecutableAsset(this, out var asset))
+                //log.Info($"Current mod asset at {asset.path}");
 
             m_Setting = new Setting(this);
             m_Setting.RegisterInOptionsUI();
@@ -31,7 +30,7 @@ namespace ReplaceThatPrefab
 
         public void OnDispose()
         {
-            log.Info(nameof(OnDispose));
+            //log.Info(nameof(OnDispose));
             if (m_Setting != null)
             {
                 m_Setting.UnregisterInOptionsUI();
