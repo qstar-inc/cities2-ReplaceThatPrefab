@@ -29,8 +29,24 @@ namespace ReplaceThatPrefab
             base.OnCreate();
             CreateTxt();
             m_PrefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
-            
-            
+
+            //m_PlacedQuery = GetEntityQuery(new EntityQueryDesc()
+            //{
+            //    All = [
+            //                ComponentType.ReadWrite<Static>()
+            //            ],
+            //    None = [
+            //                ComponentType.ReadWrite<StreetLight>(),
+            //                ComponentType.ReadWrite<Tree>(),
+            //                ComponentType.ReadWrite<Plant>(),
+            //                ComponentType.ReadWrite<Quantity>(),
+            //                ComponentType.ReadWrite<Owner>(),
+            //                ComponentType.ReadWrite<Color>(),
+            //                ComponentType.ReadWrite<Surface>(),
+            //                ComponentType.ReadWrite<Lot>(),
+            //            ]
+            //});
+            //RequireForUpdate(m_PlacedQuery);
         }
 
         protected override void OnUpdate()
@@ -171,7 +187,7 @@ namespace ReplaceThatPrefab
                                                 //var componentType = Type.GetType("Anarchy.Components.PreventOverride, AnarchyMod");
                                                 //if (componentType != null)
                                                 //{
-                                                EntityManager.AddComponent< Anarchy.Components.PreventOverride>(placedEntity);
+                                                EntityManager.AddComponent<Anarchy.Components.PreventOverride>(placedEntity);
                                                 //}
                                             }
                                             catch (Exception ex)
@@ -185,7 +201,7 @@ namespace ReplaceThatPrefab
                                     }
                                     else
                                     {
-                                        log += $" |X| failed";
+                                        log += $" |X| failed to find replacement prefab";
                                     }
                                 }
                                 Mod.log.Info(log);
@@ -208,14 +224,14 @@ namespace ReplaceThatPrefab
                     {
                         Mod.log.Info($"Failed {failed} items...");
                     }
-                    m_PlacedQuery.Dispose();
+                    //m_PlacedQuery.Dispose();
                 }
                 catch (Exception e)
                 {
                     Mod.log.Info($"[ERROR]: {e}");
                 }
             }
-            Enabled = false;
+            //Enabled = false;
         }
     }
 }
