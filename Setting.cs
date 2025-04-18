@@ -17,8 +17,12 @@ namespace ReplaceThatPrefab
     [FileLocation(nameof(ReplaceThatPrefab))]
     [SettingsUITabOrder(MainTab, AboutTab)]
     [SettingsUIGroupOrder(MainGroup, InfoGroup)]
-    public class Setting(IMod mod) : ModSetting(mod)
+    public partial class Setting : ModSetting
     {
+        public Setting(IMod mod) : base(mod)
+        {
+        }
+
         public const string MainTab = "Main";
         public const string MainGroup = "Main";
 
@@ -38,7 +42,7 @@ namespace ReplaceThatPrefab
             set
             {
                 prs.Enabled = true;
-                prs.StartReplacingBldg(ComponentType.ReadWrite<Building>());
+                prs.StartReplacing(1);
             }
         }
 
@@ -49,7 +53,7 @@ namespace ReplaceThatPrefab
             set
             {
                 prs.Enabled = true;
-                prs.StartReplacingBldg(ComponentType.ReadWrite<Static>());
+                prs.StartReplacing(2);
             }
         }
 

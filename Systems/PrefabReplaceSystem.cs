@@ -9,13 +9,15 @@ using System.Linq;
 using System;
 using Unity.Collections;
 using Unity.Entities;
+using Game.Buildings;
+using Game.Objects;
 
 namespace ReplaceThatPrefab
 {
     public partial class PrefabReplaceSystem : GameSystemBase
     {
         private PrefabSystem m_PrefabSystem;
-        private EntityQuery m_PlacedQuery;
+        //private EntityQuery m_PlacedQuery;
         private readonly string separator = "-->";
         private readonly string commentor = "#";
         private readonly string filePath = EnvPath.kUserDataPath + "/ModsData/ReplaceThatPrefab.txt";
@@ -25,24 +27,6 @@ namespace ReplaceThatPrefab
             base.OnCreate();
             CreateTxt();
             m_PrefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
-
-            //m_PlacedQuery = GetEntityQuery(new EntityQueryDesc()
-            //{
-            //    All = [
-            //                ComponentType.ReadWrite<Static>()
-            //            ],
-            //    None = [
-            //                ComponentType.ReadWrite<StreetLight>(),
-            //                ComponentType.ReadWrite<Tree>(),
-            //                ComponentType.ReadWrite<Plant>(),
-            //                ComponentType.ReadWrite<Quantity>(),
-            //                ComponentType.ReadWrite<Owner>(),
-            //                ComponentType.ReadWrite<Color>(),
-            //                ComponentType.ReadWrite<Surface>(),
-            //                ComponentType.ReadWrite<Lot>(),
-            //            ]
-            //});
-            //RequireForUpdate(m_PlacedQuery);
         }
 
         protected override void OnUpdate()
@@ -64,11 +48,11 @@ namespace ReplaceThatPrefab
             }
         }
 
-        public void StartReplacingBldg(ComponentType ct)
-        { 
+        public void StartReplacing(int ct)
+        {
             Enabled = true;
             Mod.log.Info("Starting replacer");
-            Dictionary<string, string> nameDictionary = [];
+            Dictionary<string, string> nameDictionary = new();
 
             try
             {
@@ -77,7 +61,7 @@ namespace ReplaceThatPrefab
                 {
                     if (!string.IsNullOrWhiteSpace(line) && line.Contains(separator) && !line.Contains(commentor))
                     {
-                        var parts = line.Split([separator], StringSplitOptions.RemoveEmptyEntries);
+                        var parts = line.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
                         if (parts.Length == 2)
                         {
                             string key = parts[0].Trim();
@@ -113,29 +97,24 @@ namespace ReplaceThatPrefab
             {
                 try
                 {
+                    EntityQuery m_PlacedQuery;
 
-                    m_PlacedQuery = GetEntityQuery(new EntityQueryDesc()
+                    switch (ct)
                     {
-                        All = [
-                            ct
-                        ],
-                        None = [
-                            //ComponentType.ReadWrite<StreetLight>(),
-                            //ComponentType.ReadWrite<Tree>(),
-                            //ComponentType.ReadWrite<Plant>(),
-                            //ComponentType.ReadWrite<Quantity>(),
-                            //ComponentType.ReadWrite<Owner>(),
-                            //ComponentType.ReadWrite<Color>(),
-                            //ComponentType.ReadWrite<Surface>(),
-                            //ComponentType.ReadWrite<Lot>(),
-                        ]
-                    });
+                        case 1:
+                            m_PlacedQuery = SystemAPI.QueryBuilder().WithAllRW<Building>().Build();
+                            break;
+                        case 2:
+                            m_PlacedQuery = SystemAPI.QueryBuilder().WithAllRW<Static>().Build();
+                            break;
+                        default:
+                            return;
+                    }
 
                     NativeArray<Entity> placedEntities = m_PlacedQuery.ToEntityArray(Allocator.Temp);
                     Mod.log.Info($"{placedEntities.Count()} items found for analyzing.");
 
                     CheckEntities(placedEntities, nameDictionary);
-                    //m_PlacedQuery.Dispose();
                 }
                 catch (Exception e)
                 {

@@ -3,9 +3,14 @@ using System.Collections.Generic;
 
 namespace ReplaceThatPrefab
 {
-    public class LocaleEN(Setting setting) : IDictionarySource
+    public class LocaleEN : IDictionarySource
     {
-        private readonly Setting m_Setting = setting;
+        private readonly Setting m_Setting;
+
+        public LocaleEN(Setting setting)
+        {
+            m_Setting = setting;
+        }
 
         public IEnumerable<KeyValuePair<string, string>> ReadEntries(IList<IDictionaryEntryError> errors, Dictionary<string, int> indexCounts)
         {

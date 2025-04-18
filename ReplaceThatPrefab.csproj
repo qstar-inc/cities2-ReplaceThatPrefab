@@ -4,7 +4,7 @@
 		<OutputType>Library</OutputType>
 		<TargetFramework>net472</TargetFramework>
 		<Configurations>Debug;Release</Configurations>
-		<LangVersion>12</LangVersion>
+		<LangVersion>9</LangVersion>
 		<Title>Replace That Prefab</Title>
 		<AssemblyName>ReplaceThatPrefab</AssemblyName>
 		<Author>StarQ</Author>
@@ -17,6 +17,10 @@
 	<!--Imports must be after PropertyGroup block-->
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
+
+	<Target Name="BuildUI" AfterTargets="AfterBuild">
+		<Exec Command="npm run build" WorkingDirectory="$(ProjectDir)/UI" />
+	</Target>
 
 	<ItemGroup>
 		<Reference Include="C:\Users\Qoushik\AppData\LocalLow\Colossal Order\Cities Skylines II\.cache\Mods\mods_subscribed\74604_*\Anarchy.dll">
@@ -44,6 +48,9 @@
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Colossal.Localization">
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.Mathematics">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Unity.InputSystem">
