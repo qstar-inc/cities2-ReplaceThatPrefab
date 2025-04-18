@@ -45,7 +45,7 @@ namespace ReplaceThatPrefab.Systems
 
             prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
             Enabled = false;
-            highlightedQuery = SystemAPI.QueryBuilder().WithAll<Highlighted, Static>().Build();
+            highlightedQuery = SystemAPI.QueryBuilder().WithAll<Highlighted>().Build();
         }
 
         public void ToggleTool(bool enable)
