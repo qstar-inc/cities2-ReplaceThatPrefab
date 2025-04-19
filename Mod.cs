@@ -24,6 +24,7 @@ namespace ReplaceThatPrefab
             //log.Info($"Current mod asset at {asset.path}");
 
             m_Setting = new Setting(this);
+            m_Setting.RegisterKeyBindings();
             m_Setting.RegisterInOptionsUI();
             GameManager.instance.localizationManager.AddSource("en-US", new LocaleEN(m_Setting));
 

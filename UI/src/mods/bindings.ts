@@ -4,12 +4,12 @@ import { bindValue, trigger } from "cs2/api";
 // import { NetSectionItem } from "domain/NetSectionItem";
 // import { OptionSection } from "domain/Options";
 import { RTPToolModeEnum } from "domain/RTPToolMode";
-// import { RoadConfiguration } from "domain/RoadConfiguration";
+import { ObjectsInEntity } from "domain/ObjectsInEntity";
 // import { RoadLane } from "domain/RoadLane";
 import mod from "mod.json";
 
 // export const allNetSections$ = bindValue<NetSectionGroup[]>(mod.id, "NetSections");
-// export const allRoadConfigurations$ = bindValue<RoadConfiguration[]>(mod.id, "GetRoadConfigurations");
+export const objectsInEntity$ = bindValue<ObjectsInEntity[]>(mod.id, "GetObjectsInEntity");
 export const rtpToolMode$ = bindValue(mod.id, "RTPToolMode", RTPToolModeEnum.None);
 // export const roadLanes$ = bindValue<RoadLane[]>(mod.id, "GetRoadLanes", []);
 // export const roadOptions$ = bindValue<OptionSection[]>(mod.id, "GetRoadOptions");
@@ -34,7 +34,7 @@ export const rtpToolMode$ = bindValue(mod.id, "RTPToolMode", RTPToolModeEnum.Non
 export const toggleTool = trigger.bind(null, mod.id, "ToggleTool");
 export const clearTool = trigger.bind(null, mod.id, "ClearTool");
 // export const manageRoads = trigger.bind(null, mod.id, "ManageRoads");
-// export const createNewPrefab = trigger.bind(null, mod.id, "CreateNewPrefab"); // create a new prefab from the selected one
+export const objectSelected = trigger.bind(null, mod.id, "ObjectSelected"); // create a new prefab from the selected one
 // export const pickPrefab = trigger.bind(null, mod.id, "PickPrefab"); // create a new prefab from the selected one
 // export const editPrefab = trigger.bind(null, mod.id, "EditPrefab"); // edit the selected prefab
 // export const cancelActionPopup = trigger.bind(null, mod.id, "CancelActionPopup");

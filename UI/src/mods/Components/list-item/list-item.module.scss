@@ -1,0 +1,51 @@
+.listItems {
+  //   font-size: 80%;
+  //   text-align: center;
+  aspect-ratio: 1;
+  width: 90%;
+  margin: 4rem;
+
+  position: relative;
+  left: 0rem;
+  top: 0;
+  height: 90%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: none;
+  z-index: 0;
+  color: aliceblue;
+  transition: background-color 0.25s, width 0.25s, left 0.25s, z-index 0.25s;
+
+  &.active {
+    background-color: var(--accentColorDark) !important;
+  }
+
+  &.locked {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+.gridThumbnail {
+  position: relative;
+  height: 85rem;
+  width: 85rem;
+  margin: auto;
+  //   z-index: 1;
+  filter: drop-shadow(0px 0px 2rem rgba(0, 0, 0, 0.5));
+}
+
+.buttons {
+  //   width: calc(calc(100% - 16rem) / 3);
+  background-color: rgba(182, 178, 178, 0.5);
+  border-radius: 6rem;
+  border-style: solid;
+  border-color: rgb(100, 100, 100);
+  margin: 8rem;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  flex-wrap: wrap;
+  height: 120rem;
+}

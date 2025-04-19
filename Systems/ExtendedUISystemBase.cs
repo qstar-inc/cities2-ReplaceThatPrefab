@@ -2,7 +2,6 @@
 using Colossal.UI.Binding;
 
 using Game.UI;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,7 +12,7 @@ using Unity.Entities;
 
 using UnityEngine;
 
-namespace ReplaceThatPrefab.Systems.UI
+namespace ReplaceThatPrefab.Systems
 {
     public abstract partial class ExtendedUISystemBase : UISystemBase
     {

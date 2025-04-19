@@ -1,0 +1,40 @@
+// @use "../base.scss" as _base;
+
+.container {
+  background: red;
+  color: #fff;
+  width: 400rem;
+  min-height: 120rem;
+  position: absolute;
+  bottom: 130rem;
+  right: 65rem;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 880rem;
+  background-color: var(--panelColorNormal);
+  backdrop-filter: var(--panelBlur);
+  border-radius: 6rem;
+
+  pointer-events: auto;
+
+  //   overflow: hidden;
+
+  animation: entry 0.2s;
+}
+
+.header {
+  text-align: center;
+  font-size: large;
+  background-color: var(--panelColorDark);
+  padding: 6rem;
+  border-bottom-style: solid;
+  border-bottom-width: var(--stroke2);
+  border-bottom-color: var(--accentColorDark);
+}
+
+.gridContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rem !important;
+}

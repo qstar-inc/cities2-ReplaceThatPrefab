@@ -1,5 +1,4 @@
-﻿using Anarchy.Extensions;
-using Colossal.UI.Binding;
+﻿using Colossal.UI.Binding;
 using Game.UI.InGame;
 using System;
 

@@ -11,12 +11,16 @@ using System.Threading.Tasks;
 using System;
 using Unity.Entities;
 using UnityEngine.Device;
+using Game.Input;
+using Game.UI.InGame;
 
 namespace ReplaceThatPrefab
 {
     [FileLocation(nameof(ReplaceThatPrefab))]
     [SettingsUITabOrder(MainTab, AboutTab)]
     [SettingsUIGroupOrder(MainGroup, InfoGroup)]
+    [SettingsUIMouseAction(nameof(ReplaceThatPrefab) + "Apply", "CustomUsage")]
+    [SettingsUIMouseAction(nameof(ReplaceThatPrefab) + "Cancel", "CustomUsage")]
     public partial class Setting : ModSetting
     {
         public Setting(IMod mod) : base(mod)
@@ -56,6 +60,17 @@ namespace ReplaceThatPrefab
                 prs.StartReplacing(2);
             }
         }
+
+
+        [SettingsUIMouseBinding(nameof(ReplaceThatPrefab) + "Apply"), SettingsUIHidden]
+        public ProxyBinding ApplyMimic { get; set; }
+
+        [SettingsUIMouseBinding(nameof(ReplaceThatPrefab) + "Cancel"), SettingsUIHidden]
+        public ProxyBinding CancelMimic { get; set; }
+
+        [SettingsUISection(MainTab, MainGroup), SettingsUIKeyboardBinding()]
+        public ProxyBinding ToolToggle { get; set; }
+
 
         public override void SetDefaults()
         {

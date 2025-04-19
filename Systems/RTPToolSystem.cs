@@ -19,13 +19,28 @@ using Game.SceneFlow;
 using Game.UI.InGame;
 using Unity.Collections;
 using Game.UI.Editor;
+using ReplaceThatPrefab.Systems;
+using ReplaceThatPrefab.Domain.Enums;
+
+using Game.Simulation;
+using Colossal.Json;
 
 namespace ReplaceThatPrefab.Systems
 {
     public partial class RTPToolSystem : ToolBaseSystem
     {
+#nullable disable
         private PrefabSystem prefabSystem;
-        private EntityQuery highlightedQuery;
+        private RTPUISystem rtpUiSystem;
+        private ToolSystem toolSystem;
+        private Entity lastMarkedEntity;
+        public List<Entity> objectList = new();
+        private ProxyAction placeAction;
+        private new ProxyAction applyAction;
+        private new ProxyAction cancelAction;
+#nullable enable
+
+        private EntityQuery validQuery;
         public override string toolID => "RTPTool";
 
         public override PrefabBase GetPrefab()
@@ -40,12 +55,35 @@ namespace ReplaceThatPrefab.Systems
 
         protected override void OnCreate()
         {
-            Mod.log.Info("RTPToolSystem OnCreate");
             base.OnCreate();
-
+            Mod.log.Info("RTPToolSystem OnCreate");
             prefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            rtpUiSystem = World.GetOrCreateSystemManaged<RTPUISystem>();
+            toolSystem = World.GetOrCreateSystemManaged<ToolSystem>();
             Enabled = false;
-            highlightedQuery = SystemAPI.QueryBuilder().WithAll<Highlighted>().Build();
+
+
+            applyAction = Mod.m_Setting!.GetAction(nameof(ReplaceThatPrefab) + "Apply");
+            cancelAction = Mod.m_Setting!.GetAction(nameof(ReplaceThatPrefab) + "Cancel");
+
+            var builtInApplyAction = InputManager.instance.FindAction(InputManager.kToolMap, "Apply");
+            var mimicApplyBinding = applyAction.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
+            var builtInApplyBinding = builtInApplyAction.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
+
+            mimicApplyBinding.path = builtInApplyBinding.path;
+            mimicApplyBinding.modifiers = builtInApplyBinding.modifiers;
+
+            var builtInCancelAction = InputManager.instance.FindAction(InputManager.kToolMap, "Cancel");
+            var mimicCancelBinding = cancelAction.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
+            var builtInCancelBinding = builtInCancelAction.bindings.FirstOrDefault(b => b.device == InputManager.DeviceType.Mouse);
+
+            mimicCancelBinding.path = builtInCancelBinding.path;
+            mimicCancelBinding.modifiers = builtInCancelBinding.modifiers;
+
+            InputManager.instance.SetBinding(mimicApplyBinding, out _);
+            InputManager.instance.SetBinding(mimicCancelBinding, out _);
+
+            validQuery = SystemAPI.QueryBuilder().WithAny<Highlighted>().WithAll<Game.Objects.SubObject>().Build();
         }
 
         public void ToggleTool(bool enable)
@@ -69,7 +107,7 @@ namespace ReplaceThatPrefab.Systems
         {
             Mod.log.Info($"OnStartRunning");
             base.OnStartRunning();
-            Mod.log.Info($"Starting {nameof(RTPToolSystem)}");
+            Mod.log.Info("Starting RTPToolSystem");
 
             //_modRaycastSystem.Enabled = true;
             //_validationSystem.Enabled = false;
@@ -95,40 +133,84 @@ namespace ReplaceThatPrefab.Systems
 
         public override void InitializeRaycast()
         {
-            Mod.log.Info($"InitializeRaycast");
             base.InitializeRaycast();
-
-            m_ToolRaycastSystem.netLayerMask = Layer.All;
-            m_ToolRaycastSystem.typeMask = TypeMask.Net;
-            m_ToolRaycastSystem.collisionMask = CollisionMask.OnGround | CollisionMask.Overground;
+            
+            m_ToolRaycastSystem.typeMask = TypeMask.All;
+            m_ToolRaycastSystem.raycastFlags = RaycastFlags.BuildingLots | RaycastFlags.SubBuildings | RaycastFlags.SubElements ;
+            m_ToolRaycastSystem.areaTypeMask = Game.Areas.AreaTypeMask.Lots;
+            m_ToolRaycastSystem.netLayerMask = Layer.None;
+            //m_ToolRaycastSystem.collisionMask = CollisionMask.OnGround | CollisionMask.;
         }
 
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
-            Mod.log.Info($"OnUpdate");
-            var raycastHit = HandlePicker(out var entity);
+            //placeAction.shouldBeEnabled = rtpUiSystem.Mode is RTPToolMode.Selected;
+            applyAction.shouldBeEnabled = rtpUiSystem.Mode is RTPToolMode.Picker;
+            cancelAction.shouldBeEnabled = true;
 
-            HandleHighlight(highlightedQuery, raycastHit ? x => x == entity : null);
-
-            if (raycastHit)
+            if (cancelAction.WasPerformedThisFrame())
             {
-                TryHighlightEntity(entity);
+                if (rtpUiSystem.Mode is RTPToolMode.Picker)
+                {
+                    applyAction.shouldBeEnabled = false;
+                    rtpUiSystem.ClearTool();
+                }
+                else
+                {
+                    rtpUiSystem.Mode = RTPToolMode.Picker;
+                }
+                return base.OnUpdate(inputDeps);
+            }
+
+            switch (rtpUiSystem.Mode)
+            {
+                case RTPToolMode.Picker:
+                    {
+                        objectList.Clear();
+                        var raycastHit = HandlePicker(out var entity);
+
+                        HandleHighlight(validQuery, raycastHit ? x => x == entity : null);
+
+                        if (raycastHit)
+                        {
+                            TryHighlightEntity(entity);
+                        }
+                        break;
+                    }
+                case RTPToolMode.Selected:
+                    {
+                        rtpUiSystem.ObjectSelected();
+                        Enabled = false;
+                        break;
+                    }
             }
             return base.OnUpdate(inputDeps);
+
         }
+
         private void TryHighlightEntity(Entity entity)
         {
-            Mod.log.Info($"TryHighlightEntity");
             if (entity != Entity.Null && !EntityManager.HasComponent<Highlighted>(entity))
             {
+                lastMarkedEntity = entity;
                 EntityManager.AddComponent<Highlighted>(entity);
                 EntityManager.AddComponent<BatchesUpdated>(entity);
             }
+            //Mod.log.Info(objectList.Count);
+            //for (int j = 0; j < objectList.Count; j++)
+            //{
+            //    Entity obj = objectList[j];
+
+            //    //if (!EntityManager.TryGetComponent<PrefabRef>(obj, out var prefabRef))
+            //    //{
+            //    //    string name = prefabSystem.GetPrefabName(prefabRef);
+            //    //    Mod.log.Info(name);
+            //    //}
+            //}
         }
 
         private bool HandlePicker(out Entity entity)
         {
-            Mod.log.Info($"HandlePicker");
             if (!GetRaycastResult(out entity, out var hit))
             {
                 return false;
@@ -144,7 +226,23 @@ namespace ReplaceThatPrefab.Systems
                 return false;
             }
 
-            Mod.log.Info(prefab.name);
+            if (!EntityManager.TryGetBuffer<Game.Objects.SubObject>(entity, false, out var subObjects))
+            {
+                return false;
+            }
+
+            for (var i = 0; i < subObjects.Length; i++)
+            {
+                var subObject = subObjects[i];
+                Entity ent = subObject.m_SubObject;                
+                objectList.Add(ent);
+            }
+            
+
+            if (applyAction.WasPerformedThisFrame())
+            {
+                rtpUiSystem.SetWorkingEntity(entity, RTPToolMode.Selected);
+            }
 
             return true;
         }
@@ -184,7 +282,7 @@ namespace ReplaceThatPrefab.Systems
             //applyAction.shouldBeEnabled = false;
             //cancelAction.shouldBeEnabled = false;
 
-            var entities = highlightedQuery.ToEntityArray(Allocator.Temp);
+            var entities = validQuery.ToEntityArray(Allocator.Temp);
 
             for (var i = 0; i < entities.Length; i++)
             {

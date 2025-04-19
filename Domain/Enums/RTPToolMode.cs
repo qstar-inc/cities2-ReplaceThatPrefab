@@ -4,6 +4,7 @@
     {
         None = 0,
         Picker = 1,
+        Selected = 2
         //ManageRoads = 2,
         //ActionSelection = 3,
         //Editing = 4,
